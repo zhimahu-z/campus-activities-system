@@ -205,11 +205,24 @@ const filteredActivities = computed(() => {
       filters.value.tags.some(tag => a.tags.includes(tag))
     )
   }
+  
+  // 状态筛选 - 根据时间判断实际状态
   if (filters.value.status === 'active') {
-    result = result.filter(a => a.status === 'active')
+    // 进行中：当前时间在开始时间和结束时间之间
+    result = result.filter(a => {
+      const now = new Date()
+      const startTime = new Date(a.startTime)
+      const endTime = new Date(a.endTime)
+      return now >= startTime && now <= endTime
+    })
   }
   if (filters.value.status === 'upcoming') {
-    result = result.filter(a => new Date(a.startTime) > new Date())
+    // 即将开始：当前时间早于开始时间
+    result = result.filter(a => {
+      const now = new Date()
+      const startTime = new Date(a.startTime)
+      return now < startTime
+    })
   }
 
   // 搜索关键词

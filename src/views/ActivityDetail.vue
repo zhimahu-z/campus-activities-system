@@ -333,7 +333,7 @@ onUnmounted(() => {
   window.removeEventListener('activity-registration-changed', updateActivityParticipants)
 })
 
-const handleRegister = () => {
+const handleRegister = async () => {
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录')
     router.push('/login')
@@ -361,33 +361,35 @@ const handleRegister = () => {
     return
   }
   
-  const result = userStore.registerActivity(activity.value.id)
+  const result = await userStore.registerActivity(activity.value.id)
   if (result.success) {
     ElMessage.success('报名成功！')
     // 实时更新活动参与人数
-    updateActivityParticipants()
+    await updateActivityParticipants()
   } else {
     ElMessage.error(result.message)
   }
 }
 
-const handleUnregister = () => {
-  ElMessageBox.confirm('确定要取消报名吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    const result = userStore.unregisterActivity(activity.value.id)
+const handleUnregister = async () => {
+  try {
+    await ElMessageBox.confirm('确定要取消报名吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const result = await userStore.unregisterActivity(activity.value.id)
     if (result.success) {
       ElMessage.success('已取消报名')
       // 实时更新活动参与人数
-      updateActivityParticipants()
+      await updateActivityParticipants()
     } else {
       ElMessage.error(result.message)
     }
-  }).catch(() => {
+  } catch {
     // 用户取消操作
-  })
+  }
 }
 
 // 更新活动参与人数
@@ -400,7 +402,7 @@ const updateActivityParticipants = async () => {
   }
 }
 
-const toggleFavorite = () => {
+const toggleFavorite = async () => {
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录')
     router.push('/login')
@@ -408,19 +410,29 @@ const toggleFavorite = () => {
   }
   
   if (isFavorited.value) {
-    ElMessageBox.confirm('确定要取消收藏吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      userStore.toggleFavorite(activity.value.id)
-      ElMessage.success('已取消收藏')
-    }).catch(() => {
+    try {
+      await ElMessageBox.confirm('确定要取消收藏吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+      
+      const result = await userStore.toggleFavorite(activity.value.id)
+      if (result.success) {
+        ElMessage.success('已取消收藏')
+      } else {
+        ElMessage.error(result.message)
+      }
+    } catch {
       // 用户取消操作
-    })
+    }
   } else {
-    userStore.toggleFavorite(activity.value.id)
-    ElMessage.success('已添加到收藏')
+    const result = await userStore.toggleFavorite(activity.value.id)
+    if (result.success) {
+      ElMessage.success('已添加到收藏')
+    } else {
+      ElMessage.error(result.message)
+    }
   }
 }
 

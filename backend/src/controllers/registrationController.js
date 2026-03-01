@@ -27,14 +27,40 @@ exports.registerActivity = async (req, res, next) => {
       return res.status(400).json({ message: '活动不可报名' })
     }
     
-    // 检查是否已报名
+    // 检查是否已报名（只检查状态为registered的记录）
     const existingRegistration = await Registration.findOne({
-      where: { userId, activityId }
+      where: { userId, activityId, status: 'registered' }
     })
     
     if (existingRegistration) {
       await transaction.rollback()
       return res.status(400).json({ message: '已经报名过该活动' })
+    }
+    
+    // 检查是否有已取消的报名记录，如果有则重新激活
+    const cancelledRegistration = await Registration.findOne({
+      where: { userId, activityId, status: 'cancelled' }
+    })
+    
+    if (cancelledRegistration) {
+      // 检查名额
+      if (activity.participants >= activity.maxParticipants) {
+        await transaction.rollback()
+        return res.status(400).json({ message: '活动名额已满' })
+      }
+      
+      // 重新激活报名记录
+      await cancelledRegistration.update({ status: 'registered' }, { transaction })
+      
+      // 更新活动参与人数
+      await activity.increment('participants', { transaction })
+      
+      await transaction.commit()
+      
+      return res.status(201).json({
+        message: '报名成功',
+        registration: cancelledRegistration
+      })
     }
     
     // 检查名额

@@ -319,26 +319,36 @@ onMounted(async () => {
   loading.value = false
 })
 
-const handleRegister = () => {
+const handleRegister = async () => {
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录')
     router.push('/login')
     return
   }
   
-  userStore.registerActivity(activity.value.id)
-  ElMessage.success('报名成功！')
+  const result = await userStore.registerActivity(activity.value.id)
+  if (result.success) {
+    ElMessage.success('报名成功！')
+    // 刷新活动详情以更新参与人数
+    activity.value = await activityStore.fetchActivityDetail(route.params.id)
+  } else {
+    ElMessage.error(result.message || '报名失败')
+  }
 }
 
-const toggleFavorite = () => {
+const toggleFavorite = async () => {
   if (!userStore.isLoggedIn) {
     ElMessage.warning('请先登录')
     router.push('/login')
     return
   }
   
-  userStore.toggleFavorite(activity.value.id)
-  ElMessage.success(isFavorited.value ? '已添加到收藏' : '已取消收藏')
+  const result = await userStore.toggleFavorite(activity.value.id)
+  if (result.success) {
+    ElMessage.success(isFavorited.value ? '已添加到收藏' : '已取消收藏')
+  } else {
+    ElMessage.error(result.message || '操作失败')
+  }
 }
 
 const analyzeCommentContent = async () => {

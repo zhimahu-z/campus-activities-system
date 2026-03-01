@@ -36,6 +36,7 @@ request.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response
       
+      // 只对关键错误自动显示消息，其他错误由调用方处理
       switch (status) {
         case 401:
           ElMessage.error(data.message || '未授权，请重新登录')
@@ -48,17 +49,10 @@ request.interceptors.response.use(
             }
           }, 1000)
           break
-        case 403:
-          ElMessage.error(data.message || '拒绝访问')
-          break
-        case 404:
-          ElMessage.error(data.message || '请求资源不存在')
-          break
         case 500:
           ElMessage.error(data.message || '服务器错误')
           break
-        default:
-          ElMessage.error(data.message || '请求失败')
+        // 其他错误（400, 403, 404等）不自动显示，由调用方处理
       }
     } else if (error.request) {
       ElMessage.error('网络错误，请检查网络连接')

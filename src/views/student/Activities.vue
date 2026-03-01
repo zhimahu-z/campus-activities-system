@@ -74,24 +74,7 @@
           </div>
         </div>
 
-        <div class="filter-group">
-          <label>状态</label>
-          <el-radio-group v-model="filters.status">
-            <el-radio-button label="">全部</el-radio-button>
-            <el-radio-button label="active">进行中</el-radio-button>
-            <el-radio-button label="upcoming">即将开始</el-radio-button>
-          </el-radio-group>
-        </div>
 
-        <div class="filter-group">
-          <label>排序</label>
-          <el-select v-model="sortBy" placeholder="选择排序方式">
-            <el-option label="最新发布" value="newest" />
-            <el-option label="最热门" value="hot" />
-            <el-option label="即将开始" value="upcoming" />
-            <el-option label="报名人数" value="participants" />
-          </el-select>
-        </div>
       </div>
 
       <!-- 活动列表 -->
@@ -188,14 +171,12 @@ const activityStore = useActivityStore()
 
 const loading = ref(false)
 const searchKeyword = ref('')
-const sortBy = ref('newest')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
 const filters = ref({
   category: '',
-  tags: [],
-  status: ''
+  tags: []
 })
 
 const allTags = computed(() => activityStore.getAllTags())
@@ -212,12 +193,6 @@ const filteredActivities = computed(() => {
       filters.value.tags.some(tag => a.tags.includes(tag))
     )
   }
-  if (filters.value.status === 'active') {
-    result = result.filter(a => a.status === 'active')
-  }
-  if (filters.value.status === 'upcoming') {
-    result = result.filter(a => new Date(a.startTime) > new Date())
-  }
 
   // 搜索关键词
   if (searchKeyword.value) {
@@ -227,22 +202,6 @@ const filteredActivities = computed(() => {
       a.description.toLowerCase().includes(keyword) ||
       a.tags.some(tag => tag.toLowerCase().includes(keyword))
     )
-  }
-
-  // 排序
-  switch (sortBy.value) {
-    case 'newest':
-      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      break
-    case 'hot':
-      result.sort((a, b) => b.participants - a.participants)
-      break
-    case 'upcoming':
-      result.sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
-      break
-    case 'participants':
-      result.sort((a, b) => b.participants - a.participants)
-      break
   }
 
   return result
@@ -287,11 +246,9 @@ const toggleTag = (tag) => {
 const resetFilters = () => {
   filters.value = {
     category: '',
-    tags: [],
-    status: ''
+    tags: []
   }
   searchKeyword.value = ''
-  sortBy.value = 'newest'
   currentPage.value = 1
 }
 

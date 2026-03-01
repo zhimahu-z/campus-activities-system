@@ -106,14 +106,14 @@ export const useUserStore = defineStore('user', () => {
     }
     
     try {
+      await registrationAPI.register(activityId)
+      // 报名成功后添加到列表
       if (!registrations.value.includes(activityId)) {
-        await registrationAPI.register(activityId)
         registrations.value.push(activityId)
-        // 触发全局事件，通知活动参与人数更新
-        window.dispatchEvent(new CustomEvent('activity-registration-changed'))
-        return { success: true }
       }
-      return { success: false, message: '已经报名过该活动' }
+      // 触发全局事件，通知活动参与人数更新
+      window.dispatchEvent(new CustomEvent('activity-registration-changed'))
+      return { success: true }
     } catch (error) {
       console.error('报名失败:', error)
       return { success: false, message: error.response?.data?.message || '报名失败' }
@@ -122,15 +122,15 @@ export const useUserStore = defineStore('user', () => {
 
   const unregisterActivity = async (activityId) => {
     try {
+      await registrationAPI.cancel(activityId)
+      // 取消成功后从列表移除
       const index = registrations.value.indexOf(activityId)
       if (index > -1) {
-        await registrationAPI.cancel(activityId)
         registrations.value.splice(index, 1)
-        // 触发全局事件，通知活动参与人数更新
-        window.dispatchEvent(new CustomEvent('activity-registration-changed'))
-        return { success: true }
       }
-      return { success: false, message: '未报名该活动' }
+      // 触发全局事件，通知活动参与人数更新
+      window.dispatchEvent(new CustomEvent('activity-registration-changed'))
+      return { success: true }
     } catch (error) {
       console.error('取消报名失败:', error)
       return { success: false, message: error.response?.data?.message || '取消报名失败' }
